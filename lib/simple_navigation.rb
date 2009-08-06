@@ -5,38 +5,58 @@ module SimpleNavigation
     attr_accessor :current_menu_id
 
     def simple_navigation(name)
+
       # Load navigation hash
       navigation = SimpleNavigation::Builder.navigation[name.to_sym]
+
       # Reset current menu
       self.current_menu_id = nil
+
+      html_attributes = { :id => navigation[:id],
+        :class => 'simple_navigation', :depth => 0 }
+
       # Render root menus
       content_tag(:ul,
-        navigation[:menus].map{ |menu| render_menu(menu) },
-        :id => navigation[:id],
-        :class => 'simple_navigation')
+        navigation[:menus].map{ |menu| render_menu(menu, :depth => 0) },
+        html_attributes)
+
     end # simple_navigation(name)
 
-    def render_menu(menu)
-      class_name = 'menu'
+    def render_menu(menu, options = {})
+
+      # Set default html attributes
+      list_html_attributes = { :id => [menu[:id], 'menus'].join('_'), :depth => 0 }
+      menu_html_attributes = { :id => menu[:id], :drop_down => false, :class => 'menu' }
+
+      # Detect menu depth
+      list_html_attributes[:depth] = options[:depth] + 1 if options.has_key?(:depth)
+
+      # Detect if has submenus
+      menu_html_attributes.merge!(:drop_down => true) if menu.has_key?(:menus)
+
       # Render submenus first so we can detect if current menu
       # is between child menu's
       menus = ''
       menus = content_tag(:ul,
-        menu[:menus].map{ |child| render_menu(child) },
-        :id => [menu[:id], 'menus'].join('_')) if menu.has_key?(:menus)
+        menu[:menus].map{ |child| render_menu(child, options) },
+        list_html_attributes) if
+        menu.has_key?(:menus)
+
       # Is this menu is the current?
       if current_menu?(menu)
-        class_name << ' current'
+        menu_html_attributes[:class] << ' current'
         self.current_menu_id = menu[:id]
       # Is the current menu under this menu?
       elsif self.current_menu_id
-        class_name << ' current_child' if self.current_menu_id.to_s.match(/^#{menu[:id]}/)
+        menu_html_attributes[:class] << ' current_child' if
+          self.current_menu_id.to_s.match(/^#{menu[:id]}/)
       end
+
       # Render menu
       content_tag(:li,
         render_menu_title(menu) + menus,
-        :id => menu[:id],
-        :class => class_name)
+        menu_html_attributes)
+
     end # render_menu(menu)
 
     def render_menu_title(menu)

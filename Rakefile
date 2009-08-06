@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rake'
 require 'echoe'
 
-Echoe.new('simple_navigation', '1.0') do |e|
+Echoe.new('simple_navigation', '1.1') do |e|
   e.description    = "Easy navigation menu gem for Ruby on Rails"
   e.url            = "http://github.com/mexpolk/simple_navigation"
   e.author         = "Ivan Torres"
