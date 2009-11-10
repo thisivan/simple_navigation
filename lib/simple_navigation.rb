@@ -81,6 +81,7 @@ module SimpleNavigation
     protected
 
       def current_menu?(menu)
+        return false unless menu.has_key?(:url)
         current = (controller.params[:controller] == menu[:url][:controller].gsub(/^\//, "")) &&
           (controller.params[:action] == menu[:url][:action])
         if menu.has_key?(:urls)
@@ -141,7 +142,7 @@ module SimpleNavigation
 
         def initialize(name, options = {})
           options.merge!(:i18n => false) unless options.has_key?(:i18n)
-          self.translation = name
+          self.translation = ['simple_navigation', name].join('.')
           self.id = ['simple_navigation', name].join('_')
           self.menus = []
           self.name = name
