@@ -1,9 +1,11 @@
 module SimpleNavigation
 
+  # Simple Navigation helper methods module
   module Helper
 
     attr_accessor :current_menu_id
 
+    # Renders simple navigation menu by key name
     def simple_navigation(name)
 
       # Load navigation hash
@@ -20,60 +22,57 @@ module SimpleNavigation
 
     end # simple_navigation(name)
 
-    def render_menu(menu, options = {})
-
-      # Set default html attributes
-      html_attrs = { :id => menu[:id] }
-      html_attrs[:class] = menu[:class] if menu.has_key?(:class)
-
-      # Render submenus first so we can detect if current menu
-      # is between child menu's
-      menus = ''
-      menus = content_tag(:ul,
-        menu[:menus].map{ |child| render_menu(child, options) }) if menu.has_key?(:menus)
-
-      # Is this menu is the current?
-      if current_menu?(menu)
-        html_attrs[:class] << ' current'
-        self.current_menu_id = menu[:id]
-      # Is the current menu under this menu?
-      elsif self.current_menu_id
-        html_attrs[:class] << ' current' if
-          self.current_menu_id.to_s.match(/^#{menu[:id]}/)
-      end
-
-      # Render menu
-      content_tag(:li,
-        render_menu_title(menu) + menus,
-        html_attrs)
-
-    end # render_menu(menu)
-
-    def render_menu_title(menu)
-      title = ''
-      if menu[:options][:i18n]
-        if menu.has_key?(:title)
-          title = t(menu[:translation], :default => menu[:title])
-        else
-          title = t(menu[:translation], :default => menu[:name].to_s.titleize)
-        end
-      else
-        if menu.has_key?(:title)
-          title = menu[:title]
-        else
-          title = menu[:name].to_s.titleize
-        end
-      end
-      if menu.has_key?(:url)
-        title = link_to(title, url_for(menu[:url]))
-      else
-        title = content_tag(:span, title)
-      end
-      title
-    end # render_menu_title(menu)
-
     protected
 
+      # Render menu element
+      def render_menu(menu, options = {})
+
+        # Set default html attributes
+        html_attrs = { :id => menu[:id] }
+        html_attrs[:class] = menu[:class] if menu.has_key?(:class)
+
+        # Render submenus first so we can detect if current menu
+        # is between child menu's
+        menus = ''
+        menus = content_tag(:ul,
+          menu[:menus].map{ |child| render_menu(child, options) }) if menu.has_key?(:menus)
+
+        # Is this menu is the current?
+        if current_menu?(menu)
+          html_attrs[:class] << ' current'
+          self.current_menu_id = menu[:id]
+        # If any of the children menus is the current
+        # mark parent menu as current too
+        elsif self.current_menu_id
+          html_attrs[:class] << ' current' if
+            self.current_menu_id.to_s.match(/^#{menu[:id]}/)
+        end
+
+        # Render menu
+        content_tag(:li, render_menu_title(menu) + menus, html_attrs)
+
+      end # render_menu(menu)
+
+      # Renders the menu title
+      #
+      # * If menu hash has the title key it is used as the title for the menu being rendered
+      # * If menu hash +:title+ key is not present then it formats +:name+ key as titleized string
+      # * If menu hash +:title+ key is not present and i18n is turned on, then it will use +:name+ key as translation key
+      def render_menu_title(menu)
+        title = if menu.has_key?(:title)
+          menu[:title]
+        else
+          if menu[:options][:i18n]
+            t(menu[:translation], :default => menu[:name].to_s.titleize)
+          else
+            menu[:name].to_s.titleize
+          end
+        end
+        link_to(title, (menu.has_key?(:url) ? url_for(menu[:url]) : "#" ))
+      end # render_menu_title(menu)
+
+      # Detects if the menu being rendered is the current
+      # (it also marks parent menus as current).
       def current_menu?(menu)
         return false unless menu.has_key?(:url)
         current = (controller.params[:controller] == menu[:url][:controller].gsub(/^\//, "")) &&
@@ -96,6 +95,7 @@ module SimpleNavigation
 
   end # Helper
 
+  # Simple Navigation configuration class
   class Configuration
 
     attr_accessor :navigation
@@ -110,6 +110,7 @@ module SimpleNavigation
       builder.navigations.each { |tmp| self.navigation[tmp[:name]] = tmp }
     end
 
+    # Simple Navigation configuration builder
     class Builder
 
       attr_accessor :navigations, :prefix
@@ -131,6 +132,7 @@ module SimpleNavigation
         { :navigations => navigations }
       end
 
+      # Hash structure containing simple navigation menu configuration
       class Navigation
 
         attr_accessor :id, :menus, :name, :options, :translation
@@ -164,6 +166,7 @@ module SimpleNavigation
             :options => self.options }
         end
 
+        # Menu builder
         class Menu
 
           attr_accessor :id, :menus, :name, :options, :title, :translation, :url, :urls

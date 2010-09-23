@@ -76,7 +76,7 @@ this:
   end
 
 To render you newly created menu called :default, in your default layout
-(layout/application.erb):
+(layout/application.html.erb):
 
   <%= simple_navigation :default %>
 
