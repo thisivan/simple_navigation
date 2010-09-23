@@ -29,7 +29,7 @@ module SimpleNavigation
 
         # Set default html attributes
         html_attrs = { :id => menu[:id] }
-        html_attrs[:class] = menu[:class] if menu.has_key?(:class)
+        html_attrs[:class] = menu[:class] || ""
 
         # Render submenus first so we can detect if current menu
         # is between child menu's
@@ -152,7 +152,7 @@ module SimpleNavigation
           options = args.last.is_a?(::Hash) ? args.last : {}
           options.merge!(:i18n => self.options[:i18n])
           options.merge!(:translation => [self.translation, 'menus'].join('.'))
-          options.merge!(:prefix => [self.id, 'menus'].join('_'))
+          options.merge!(:prefix => self.id)
           menu = Menu.new(name, title, options)
           yield menu if block
           self.menus << menu.build
@@ -190,7 +190,7 @@ module SimpleNavigation
             options = args.last.is_a?(::Hash) ? args.last : {}
             options.merge!(:i18n => self.options[:i18n])
             options.merge!(:translation => [self.translation, 'menus'].join('.'))
-            options.merge!(:prefix => [self.id, 'menus'].join('_'))
+            options.merge!(:prefix => self.id)
             menu = Menu.new(name, title, options)
             yield menu if block
             self.menus << menu.build
