@@ -12,50 +12,40 @@ module SimpleNavigation
       # Reset current menu
       self.current_menu_id = nil
 
-      html_attributes = { :id => navigation[:id],
-        :class => 'simple_navigation', :depth => 0 }
+      html_attrs = { :id => navigation[:id], :class => 'simple_navigation' }
+      html_attrs[:class] << " #{navigation[:class]}" if navigation.has_key?(:class)
 
       # Render root menus
-      content_tag(:ul,
-        navigation[:menus].map{ |menu| render_menu(menu, :depth => 0) },
-        html_attributes)
+      content_tag(:ul, navigation[:menus].map{ |menu| render_menu(menu) }, html_attrs)
 
     end # simple_navigation(name)
 
     def render_menu(menu, options = {})
 
       # Set default html attributes
-      list_html_attributes = { :id => [menu[:id], 'menus'].join('_'), :depth => 0 }
-      menu_html_attributes = { :id => menu[:id], :drop_down => false, :class => 'menu' }
-
-      # Detect menu depth
-      list_html_attributes[:depth] = options[:depth] + 1 if options.has_key?(:depth)
-
-      # Detect if has submenus
-      menu_html_attributes.merge!(:drop_down => true) if menu.has_key?(:menus)
+      html_attrs = { :id => menu[:id] }
+      html_attrs[:class] = menu[:class] if menu.has_key?(:class)
 
       # Render submenus first so we can detect if current menu
       # is between child menu's
       menus = ''
       menus = content_tag(:ul,
-        menu[:menus].map{ |child| render_menu(child, options) },
-        list_html_attributes) if
-        menu.has_key?(:menus)
+        menu[:menus].map{ |child| render_menu(child, options) }) if menu.has_key?(:menus)
 
       # Is this menu is the current?
       if current_menu?(menu)
-        menu_html_attributes[:class] << ' current'
+        html_attrs[:class] << ' current'
         self.current_menu_id = menu[:id]
       # Is the current menu under this menu?
       elsif self.current_menu_id
-        menu_html_attributes[:class] << ' current_child' if
+        html_attrs[:class] << ' current' if
           self.current_menu_id.to_s.match(/^#{menu[:id]}/)
       end
 
       # Render menu
       content_tag(:li,
         render_menu_title(menu) + menus,
-        menu_html_attributes)
+        html_attrs)
 
     end # render_menu(menu)
 
@@ -74,7 +64,11 @@ module SimpleNavigation
           title = menu[:name].to_s.titleize
         end
       end
-      title = link_to(title, url_for(menu[:url])) if menu.has_key?(:url)
+      if menu.has_key?(:url)
+        title = link_to(title, url_for(menu[:url]))
+      else
+        title = content_tag(:span, title)
+      end
       title
     end # render_menu_title(menu)
 
@@ -99,6 +93,7 @@ module SimpleNavigation
         end
         current
       end # current_menu?
+
   end # Helper
 
   class Configuration
@@ -143,7 +138,7 @@ module SimpleNavigation
         def initialize(name, options = {})
           options.merge!(:i18n => false) unless options.has_key?(:i18n)
           self.translation = ['simple_navigation', name].join('.')
-          self.id = ['simple_navigation', name].join('_')
+          self.id = name
           self.menus = []
           self.name = name
           self.options = options

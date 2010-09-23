@@ -2,12 +2,13 @@
 
 Gem::Specification.new do |s|
   s.name = %q{simple_navigation}
-  s.version = "1.2"
+  s.version = "1.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 1.2") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ivan Torres"]
-  s.date = %q{2009-11-10}
-  s.description = %q{Easy navigation menu gem for Ruby on Rails}
+  s.cert_chain = ["/Users/ivan/.ssh/gem-public_cert.pem"]
+  s.date = %q{2010-09-23}
+  s.description = %q{Simple navigation menu gem for Ruby on Rails}
   s.email = %q{mexpolk@gmail.com}
   s.extra_rdoc_files = ["README.rdoc", "lib/simple_navigation.rb"]
   s.files = ["Manifest", "README.rdoc", "Rakefile", "init.rb", "lib/simple_navigation.rb", "simple_navigation.gemspec"]
@@ -15,14 +16,15 @@ Gem::Specification.new do |s|
   s.rdoc_options = ["--line-numbers", "--inline-source", "--title", "Simple_navigation", "--main", "README.rdoc"]
   s.require_paths = ["lib"]
   s.rubyforge_project = %q{simple_navigation}
-  s.rubygems_version = %q{1.3.5}
-  s.summary = %q{Easy navigation menu gem for Ruby on Rails}
+  s.rubygems_version = %q{1.3.7}
+  s.signing_key = %q{/Users/ivan/.ssh/gem-private_key.pem}
+  s.summary = %q{Simple navigation menu gem for Ruby on Rails}
 
   if s.respond_to? :specification_version then
     current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
     s.specification_version = 3
 
-    if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
+    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
     else
     end
   else
