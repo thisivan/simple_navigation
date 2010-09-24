@@ -14,11 +14,27 @@ module SimpleNavigation
       # Reset current menu
       self.current_menu_id = nil
 
-      html_attrs = { :id => navigation[:id], :class => 'simple_navigation' }
-      html_attrs[:class] << " #{navigation[:class]}" if navigation.has_key?(:class)
+      options = {
+        :id    => navigation[:id],
+        :class => 'simple_navigation'
+      }
+
+      # Set CSS class that user may added
+      if navigation.has_key?(:options) && navigation[:options].has_key?(:class)
+        options[:class] << " #{navigation[:options][:class]}"
+      end
 
       # Render root menus
-      content_tag(:ul, navigation[:menus].map{ |menu| render_menu(menu) }, html_attrs)
+      if navigation.has_key?(:menus) && !navigation[:menus].empty?
+        menus = navigation[:menus].enum_with_index.collect do |item, index|
+          item_options = { :class => item[:options][:class].clone || '' }
+          item_options[:class] << ' first' if index == 0
+          item_options[:class] << ' last'  if index == navigation[:menus].size - 1
+          render_menu(item, item_options)
+        end
+      end
+
+      content_tag(:ul, menus || '', options)
 
     end # simple_navigation(name)
 
@@ -28,28 +44,36 @@ module SimpleNavigation
       def render_menu(menu, options = {})
 
         # Set default html attributes
-        html_attrs = { :id => menu[:id] }
-        html_attrs[:class] = menu[:class] || ""
+        options[:id] = menu[:id]
 
-        # Render submenus first so we can detect if current menu
+        # FIXME: Make the following code block DRY, by including it
+        #        on render_menu method
+
+        # Render sub-menus first so we can detect if current menu
         # is between child menu's
         menus = ''
-        menus = content_tag(:ul,
-          menu[:menus].map{ |child| render_menu(child, options) }) if menu.has_key?(:menus)
+        if menu.has_key?(:menus) && !menu[:menus].empty?
+          menus = menu[:menus].enum_with_index.collect do |item, index|
+            item_options = { :class => item[:options][:class].clone || '' }
+            item_options[:class] << ' first' if index == 0
+            item_options[:class] << ' last'  if index == menu[:menus].size - 1
+            render_menu(item, item_options)
+          end
+          menus = content_tag(:ul, menus)
+        end
 
         # Is this menu is the current?
         if current_menu?(menu)
-          html_attrs[:class] << ' current'
+          options[:class] << ' current'
           self.current_menu_id = menu[:id]
         # If any of the children menus is the current
         # mark parent menu as current too
         elsif self.current_menu_id
-          html_attrs[:class] << ' current' if
-            self.current_menu_id.to_s.match(/^#{menu[:id]}/)
+          options[:class] << ' current' if self.current_menu_id.to_s.match(/^#{menu[:id]}/)
         end
 
         # Render menu
-        content_tag(:li, render_menu_title(menu) + menus, html_attrs)
+        content_tag(:li, render_menu_title(menu) + menus, options)
 
       end # render_menu(menu)
 
@@ -68,7 +92,7 @@ module SimpleNavigation
             menu[:name].to_s.titleize
           end
         end
-        link_to(title, (menu.has_key?(:url) ? url_for(menu[:url]) : "#" ))
+        link_to(content_tag(:span, title), (menu.has_key?(:url) ? url_for(menu[:url]) : "#" ))
       end # render_menu_title(menu)
 
       # Detects if the menu being rendered is the current
@@ -79,13 +103,13 @@ module SimpleNavigation
           (controller.params[:action] == menu[:url][:action])
         if menu.has_key?(:urls)
            (menu[:urls].is_a?(Array) ? menu[:urls] : [menu[:urls]]).each do |controllers|
-            (controllers.is_a?(Array) ? controllers : [controllers]).each do |c|
-              current |= controller.params[:controller] == c[:controller].gsub(/^\//, "")
-              if c.has_key?(:only)
-                current &= (c[:only].is_a?(Array) ? c[:only] : [c[:only]]).include?(controller.params[:action])
+            (controllers.is_a?(Array) ? controllers : [controllers]).each do |item|
+              current |= controller.params[:controller] == item[:controller].gsub(/^\//, "")
+              if item.has_key?(:only)
+                current &= (item[:only].is_a?(Array) ? item[:only] : [item[:only]]).include?(controller.params[:action])
               end
-              if c.has_key?(:except)
-                current &= !((c[:except].is_a?(Array) ? c[:except] : [c[:except]]).include?(controller.params[:action]))
+              if item.has_key?(:except)
+                current &= !((item[:except].is_a?(Array) ? item[:except] : [item[:except]]).include?(controller.params[:action]))
               end
             end
           end
@@ -153,6 +177,7 @@ module SimpleNavigation
           options.merge!(:i18n => self.options[:i18n])
           options.merge!(:translation => [self.translation, 'menus'].join('.'))
           options.merge!(:prefix => self.id)
+          options.merge!(:class => "") unless options.has_key?(:class)
           menu = Menu.new(name, title, options)
           yield menu if block
           self.menus << menu.build
@@ -191,6 +216,7 @@ module SimpleNavigation
             options.merge!(:i18n => self.options[:i18n])
             options.merge!(:translation => [self.translation, 'menus'].join('.'))
             options.merge!(:prefix => self.id)
+            options.merge!(:class => "") unless options.has_key?(:class)
             menu = Menu.new(name, title, options)
             yield menu if block
             self.menus << menu.build
