@@ -3,10 +3,10 @@ module SimpleNavigation
   # Simple Navigation helper methods module
   module Helper
 
-    attr_accessor :current_menu_id
+    attr_accessor :current_menu_id, :custom_titles
 
     # Renders simple navigation menu by key name
-    def simple_navigation(name)
+    def simple_navigation(name, options = {})
 
       # Load navigation hash
       navigation = SimpleNavigation::Builder.navigation[name.to_sym]
@@ -14,14 +14,16 @@ module SimpleNavigation
       # Reset current menu
       self.current_menu_id = nil
 
-      options = {
-        :id    => navigation[:id],
-        :class => 'simple_navigation'
+      settings = {
+        :id            => navigation[:id],
+        :class         => options[:class] || 'simple_navigation',
       }
+
+      self.custom_titles = options[:custom_titles] || {}
 
       # Set CSS class that user may added
       if navigation.has_key?(:options) && navigation[:options].has_key?(:class)
-        options[:class] << " #{navigation[:options][:class]}"
+        settings[:class] << " #{navigation[:options][:class]}"
       end
 
       # Render root menus
@@ -34,7 +36,7 @@ module SimpleNavigation
         end
       end
 
-      content_tag(:ul, menus || '', options)
+      content_tag(:ul, menus || '', settings)
 
     end # simple_navigation(name)
 
@@ -83,7 +85,9 @@ module SimpleNavigation
       # * If menu hash +:title+ key is not present then it formats +:name+ key as titleized string
       # * If menu hash +:title+ key is not present and i18n is turned on, then it will use +:name+ key as translation key
       def render_menu_title(menu)
-        title = if menu.has_key?(:title)
+        title = if self.custom_titles.has_key?(menu[:id])
+          self.custom_titles[menu[:id]]
+        elsif menu.has_key?(:title)
           menu[:title]
         else
           if menu[:options][:i18n]
