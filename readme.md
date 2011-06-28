@@ -100,6 +100,7 @@ And add to your config/locales files (e.g. es-MX.yml) the following:
                         index: "Panel de Control"  # The title for index action child menu
                         new: "Nueva Página"        # The title for new action child menu
 
+
 ## License
 
 Copyright (c) 2008 Iván "Mexpolk" Torres
